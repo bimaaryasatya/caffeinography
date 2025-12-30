@@ -13,16 +13,14 @@ class ProductFormPage extends StatefulWidget {
 class _ProductFormPageState extends State<ProductFormPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Fields
   int? _id;
   final _nameController = TextEditingController();
   final _categoryController = TextEditingController();
-  String _type = 'BAHAN'; // Default
+  String _type = 'BAHAN';
   final _buyPriceController = TextEditingController();
   final _sellPriceController = TextEditingController();
   final _stockController = TextEditingController();
   final _unitController = TextEditingController();
-
   DateTime? _createdAt;
 
   @override
@@ -55,22 +53,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   void _save() async {
     if (_formKey.currentState!.validate()) {
-      final name = _nameController.text;
-      final category = _categoryController.text;
-      final buyPrice = double.tryParse(_buyPriceController.text) ?? 0;
-      final sellPrice = double.tryParse(_sellPriceController.text) ?? 0;
-      final stock = double.tryParse(_stockController.text) ?? 0;
-      final unit = _unitController.text;
-
       final product = Product(
         id: _id,
-        name: name,
-        category: category,
+        name: _nameController.text,
+        category: _categoryController.text,
         type: _type,
-        buyPrice: buyPrice,
-        sellPrice: sellPrice,
-        stock: stock,
-        unit: unit,
+        buyPrice: double.tryParse(_buyPriceController.text) ?? 0,
+        sellPrice: double.tryParse(_sellPriceController.text) ?? 0,
+        stock: double.tryParse(_stockController.text) ?? 0,
+        unit: _unitController.text,
         createdAt: _createdAt ?? DateTime.now(),
       );
 
@@ -85,105 +76,216 @@ class _ProductFormPageState extends State<ProductFormPage> {
         if (mounted) Navigator.pop(context);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
         }
       }
     }
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: const Color(0xFF8D6E63)),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFD7CCC8)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFD7CCC8)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF5D4037), width: 2),
+      ),
+      labelStyle: const TextStyle(color: Color(0xFF8D6E63)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isEditing = _id != null;
     return Scaffold(
-      appBar: AppBar(title: Text(isEditing ? 'Edit Product' : 'New Product')),
+      backgroundColor: const Color(0xFFF5F0EB),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF5D4037),
+        foregroundColor: Colors.white,
+        title: Text(
+          isEditing ? 'Edit Product' : 'Add Product',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Product Icon Header
+              Center(
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5D4037),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(
+                    Icons.local_cafe,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Basic Info Section
+              const Text(
+                'Basic Information',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF5D4037),
+                ),
+              ),
+              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: _inputDecoration('Product Name', Icons.label),
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Required' : null,
+                    value?.isEmpty == true ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+
               TextFormField(
                 controller: _categoryController,
-                decoration: const InputDecoration(labelText: 'Category'),
+                decoration: _inputDecoration('Category', Icons.category),
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Required' : null,
+                    value?.isEmpty == true ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+
               DropdownButtonFormField<String>(
                 value: _type,
-                decoration: const InputDecoration(labelText: 'Type'),
+                decoration: _inputDecoration('Type', Icons.type_specimen),
                 items: const [
-                  DropdownMenuItem(value: 'BAHAN', child: Text('BAHAN')),
-                  DropdownMenuItem(value: 'CAFE', child: Text('CAFE')),
+                  DropdownMenuItem(
+                    value: 'BAHAN',
+                    child: Text('BAHAN (Ingredient)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'CAFE',
+                    child: Text('CAFE (Ready to Sell)'),
+                  ),
                 ],
                 onChanged: (val) {
                   if (val != null) setState(() => _type = val);
                 },
               ),
+              const SizedBox(height: 24),
+
+              // Pricing Section
+              const Text(
+                'Pricing',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF5D4037),
+                ),
+              ),
               const SizedBox(height: 12),
+
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _buyPriceController,
-                      decoration: const InputDecoration(labelText: 'Buy Price'),
+                      decoration: _inputDecoration(
+                        'Buy Price',
+                        Icons.shopping_cart,
+                      ),
                       keyboardType: TextInputType.number,
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Required' : null,
+                          value?.isEmpty == true ? 'Required' : null,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
                       controller: _sellPriceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Sell Price',
-                      ),
+                      decoration: _inputDecoration('Sell Price', Icons.sell),
                       keyboardType: TextInputType.number,
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Required' : null,
+                          value?.isEmpty == true ? 'Required' : null,
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 24),
+
+              // Inventory Section
+              const Text(
+                'Inventory',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF5D4037),
+                ),
+              ),
               const SizedBox(height: 12),
+
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _stockController,
-                      decoration: const InputDecoration(labelText: 'Stock'),
+                      decoration: _inputDecoration('Stock', Icons.inventory),
                       keyboardType: TextInputType.number,
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Required' : null,
+                          value?.isEmpty == true ? 'Required' : null,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
                       controller: _unitController,
-                      decoration: const InputDecoration(labelText: 'Unit'),
+                      decoration: _inputDecoration('Unit', Icons.scale),
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Required' : null,
+                          value?.isEmpty == true ? 'Required' : null,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
+
+              // Save Button
               SizedBox(
                 width: double.infinity,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: _save,
-                  child: Text(isEditing ? 'Update' : 'Save'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5D4037),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: Text(
+                    isEditing ? 'Update Product' : 'Save Product',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ],

@@ -49,11 +49,11 @@ class TransactionController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> checkout({
+  Future<TransactionModel?> checkout({
     required String paymentMethod,
     double? amountReceived,
   }) async {
-    if (_cart.isEmpty) return;
+    if (_cart.isEmpty) return null;
 
     _isLoading = true;
     notifyListeners();
@@ -67,7 +67,7 @@ class TransactionController extends ChangeNotifier {
           ? amountReceived - total
           : null;
 
-      final transaction = TransactionModel(
+      var transaction = TransactionModel(
         invoice: invoice,
         total: total,
         paymentMethod: paymentMethod,
@@ -86,9 +86,26 @@ class TransactionController extends ChangeNotifier {
         );
       }).toList();
 
-      await _repository.createTransaction(transaction, items);
+      final transactionId = await _repository.createTransaction(
+        transaction,
+        items,
+      );
+
+      // Create updated model with ID
+      transaction = TransactionModel(
+        id: transactionId,
+        invoice: invoice,
+        total: total,
+        paymentMethod: paymentMethod,
+        paymentStatus: transaction.paymentStatus,
+        paymentRef: null,
+        amountReceived: amountReceived,
+        change: change,
+        createdAt: now,
+      );
 
       clearCart();
+      return transaction;
     } catch (e) {
       rethrow;
     } finally {

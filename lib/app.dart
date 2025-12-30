@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'core/routes/app_routes.dart';
 import 'features/product/presentation/controllers/product_controller.dart';
 import 'features/transaction/presentation/controllers/transaction_controller.dart';
+import 'features/payment/presentation/controllers/payment_controller.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -13,6 +14,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ProductController()),
         ChangeNotifierProvider(create: (_) => TransactionController()),
+        Provider(create: (_) => PaymentController()),
       ],
       child: MaterialApp(
         title: 'CoffeePOS',

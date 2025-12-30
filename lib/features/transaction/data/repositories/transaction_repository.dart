@@ -4,13 +4,13 @@ import '../models/transaction_model.dart';
 class TransactionRepository {
   final SQLiteService _dbService = SQLiteService.instance;
 
-  Future<void> createTransaction(
+  Future<int> createTransaction(
     TransactionModel transaction,
     List<TransactionItemModel> items,
   ) async {
     final db = await _dbService.database;
 
-    await db.transaction((txn) async {
+    return await db.transaction((txn) async {
       // 1. Insert Transaction
       final transactionId = await txn.insert(
         'transactions',
@@ -33,6 +33,41 @@ class TransactionRepository {
           'UPDATE products SET stock = stock - ? WHERE id = ?',
           [item.quantity, item.productId],
         );
+      }
+
+      return transactionId;
+    });
+  }
+
+  Future<void> updatePaymentStatus(
+    int transactionId,
+    String status,
+    String? paymentRef,
+  ) async {
+    final db = await _dbService.database;
+
+    await db.transaction((txn) async {
+      await txn.update(
+        'transactions',
+        {'payment_status': status, 'payment_ref': paymentRef},
+        where: 'id = ?',
+        whereArgs: [transactionId],
+      );
+
+      // If status is FAILED, restore stock
+      if (status == 'FAILED') {
+        final items = await txn.query(
+          'transaction_items',
+          where: 'transaction_id = ?',
+          whereArgs: [transactionId],
+        );
+
+        for (final item in items) {
+          await txn.rawUpdate(
+            'UPDATE products SET stock = stock + ? WHERE id = ?',
+            [item['quantity'], item['product_id']],
+          );
+        }
       }
     });
   }
